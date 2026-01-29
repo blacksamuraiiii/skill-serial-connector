@@ -42,60 +42,39 @@
 ## 🛠️ 调用流程
 
 ```mermaid
-graph TD
-    A[开始] --> B[准备命令列表 commands]
-    B --> C[调用 create_task_file 生成任务文件]
-    C --> D{是否从中断处继续?}
-    D -- 是 --> E[调用 execute_task_file resume=True]
-    D -- 否 --> F[调用 execute_task_file resume=False]
-    E --> G[分析日志进度]
-    F --> H[从第一条开始执行]
-    G --> I[逐条发送命令至串口]
-    H --> I
-    I --> J[记录实时日志 .log]
-    J --> K{所有命令执行完?}
-    K -- 否 --> I
-    K -- 是 --> L[生成执行摘要]
-    L --> M[结束]
+graph LR
+    A[用户提出自然语言需求] --> B[AI 加载 SKILL]
+    B --> C[AI 结合厂商文档生成 CLI 命令]
+    C --> D[AI 调用脚本执行任务]
+    D --> E[生成实时日志并返回结果]
 ```
 
 ---
 
 ## 🚀 快速开始
 
-### 1. 自动生成并执行（推荐）
+### 1. 安装与自动加载 SKILL（推荐方式）
 
-这是最简单的调用方式，只需准备好厂商、端口、密码和命令列表：
+首先，克隆本项目到本地：
 
-```python
-from scripts.serial_connector import create_task_file, execute_task_file
-
-# 1. 定义配置
-commands = [
-    "enable",
-    "configure terminal",
-    "interface gei-2/1",
-    "switchport mode access",
-    "switchport access vlan 10",
-    "exit"
-]
-
-# 2. 创建任务文件（会自动生成带时间戳的文件，如 ZTE_20260129_190900.txt）
-task_file, log_file = create_task_file(
-    vendor="ZTE",
-    com_port="COM6",
-    baud_rate=115200,
-    password="your_password",
-    commands=commands,
-    output_dir="." # 输出到当前目录
-)
-
-# 3. 执行任务
-result = execute_task_file(task_file, resume=True)
-
-if result.get("status") == "success":
-    print(f"执行成功！日志保存在: {result['log_file']}")
+```bash
+git clone https://github.com/blacksamuraiiii/skill-serial-connector
 ```
+
+然后，直接在 AI 助手（如 Cursor、Claude Code）的对话框中输入以下指令即可：
+
+> **“加载项目级 SKILL，地址：./skill-serial-connector”**
+
+加载成功后，你只需描述你的需求，AI 将自动接管一切：
+
+> **用户问**：
+> “帮我配置这台中兴交换机，COM6口，密码是admin。需要把 gei-2/2 端口加入 VLAN 20。”
+>
+> **AI 动作**：
+>
+> 1. 读取 `references/zte-commands.md` 确认语法。
+> 2. 自动生成包含 `enable`、`config t` 等模式切换的完整命令序列。
+> 3. 调用 `serial_connector.py` 自动执行，并实时通过日志感知执行进度。
 
 ### 2. 任务文件格式
 
@@ -160,10 +139,14 @@ skill-serial-connector/
 
 ---
 
-## 🔗 项目链接
+## 🧪 测试说明与社区贡献
 
-- **GitHub**: [blacksamuraiiii/skill-serial-connector](https://github.com/blacksamuraiiii/skill-serial-connector)
-- **License**: MIT
+⚠️ **当前状态**：由于作者手头硬件限制，目前本项目**仅在中兴 (ZTE) 交换机下进行了部分功能测试并确认成功**。华为、思科、锐捷等厂商的逻辑基于手册编写，尚未经过真机验证。
+
+🤝 **欢迎贡献**：
+
+- 如果你在其他厂商设备上测试成功或发现问题，欢迎提交 **Issue** 或直接 **Fork** 本项目进行修改并提交 **Pull Request**。
+- 你的每一行代码贡献都能帮助更多工程师解决串口自动化的烦恼！
 
 ---
 
